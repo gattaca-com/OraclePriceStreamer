@@ -6,10 +6,10 @@ import (
 )
 
 type Price struct {
-	price int64
-	slot uint64
-	symbol string
-	decimals uint
+	Price int64
+	Slot uint64
+	Symbol string
+	Decimals uint
 }
 
 type AggPrice struct {
@@ -62,7 +62,7 @@ func (fifo *PriceBuffer) Append(elt Price) {
 
 }
 
-func (fifo *PriceBuffer) IsValidPrice(price Price) bool {
+func (fifo *PriceBuffer) IsValidPrice(price *Price) bool {
 
 	defer fifo.lock.Release()
 	fifo.lock.Acquire()
@@ -71,7 +71,7 @@ func (fifo *PriceBuffer) IsValidPrice(price Price) bool {
 	for elt := fifo.buffer.Front(); elt != nil; elt = elt.Next() {
 		cachedPrice := elt.Value.(Price)
 
-		if cachedPrice.price == price.price && cachedPrice.slot == price.slot && price.symbol == price.symbol{
+		if cachedPrice.Price == price.Price && cachedPrice.Slot == price.Slot && price.Symbol == price.Symbol{
 			return true
 		}
 	}

@@ -38,7 +38,19 @@ func NewPythStreamer(products map[solana.PublicKey]PythProduct, rpcURL string, w
 	return priceStreamer
 }
 
-func (streamer PythStreamer) StreamProducts() {
+func (streamer *PythStreamer) IsValidPrice(price *Price) bool {
+
+	priceBuffer, err := streamer.GetPriceBuffer(price)
+
+	if err != nil {
+		return false
+	}
+
+	return priceBuffer.IsValidPrice(price)
+
+}
+
+func (streamer *PythStreamer) StreamProducts() {
 
 	client := pyth.NewClient(pyth.Devnet, streamer.rpcURL, streamer.wsURL)
 	stream := client.StreamPriceAccounts()
@@ -51,10 +63,10 @@ func (streamer PythStreamer) StreamProducts() {
 
 			buffer := streamer.priceCache[update.Product]
 			price := Price{
-				price: update.Agg.Price,
-				slot: update.Agg.PubSlot, 
-				symbol: streamer.products[update.Product].Symbol,
-				decimals: uint(update.Exponent),
+				Price: update.Agg.Price,
+				Slot: update.Agg.PubSlot, 
+				Symbol: streamer.products[update.Product].Symbol,
+				Decimals: uint(update.Exponent),
 			}
 
 			buffer.Append(price)
@@ -67,7 +79,7 @@ func (streamer PythStreamer) StreamProducts() {
 
 }
 
-func (streamer PythStreamer) GetPrices() []*Price {
+func (streamer *PythStreamer) GetPrices() []*Price {
 
 	var prices []*Price
 
@@ -81,8 +93,21 @@ func (streamer PythStreamer) GetPrices() []*Price {
 
 }
 
+func (streamer *PythStreamer) GetPriceBuffer(price *Price) (*PriceBuffer, error) {
+	for key, _ := range streamer.products {
 
-func (streamer PythStreamer)shouldDump(productKey solana.PublicKey) bool {
+		if streamer.products[key].Symbol == price.Symbol {
+			buffer := streamer.priceCache[key] 
+			return &buffer, nil
+
+		}
+        
+    }
+	return nil, fmt.Errorf("failed to find price buffer for %s", price.Symbol)
+}
+
+
+func (streamer *PythStreamer)shouldDump(productKey solana.PublicKey) bool {
 
 	if _, ok := streamer.products[productKey]; ok {
 		return true
