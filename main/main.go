@@ -48,8 +48,7 @@ func streamPythPrices() {
 		Symbol: "AVAX/USD",
 		Key: avaxKey,
 	}
-	
-	
+		
 
 	myStreamer := streamer.NewPythStreamer(products, testRPC, testWS)
 

@@ -1,12 +1,27 @@
 package streamer
 
-import "container/list"
+import (
+	"container/list"
+	"fmt"
+)
 
 type Price struct {
 	price int64
 	slot uint64
 	symbol string
 	decimals uint
+}
+
+type AggPrice struct {
+	price int64
+	sourceIds string
+	symbol string
+	decimals uint
+}
+
+func (p *AggPrice) setSourceId( pythSlot int, chainlinkSlot int) {
+
+	p.sourceIds = fmt.Sprintf("%d:%d", pythSlot, chainlinkSlot)
 }
 
 
