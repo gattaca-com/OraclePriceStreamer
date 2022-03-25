@@ -41,6 +41,14 @@ func NewPriceBuffer(size uint64) *PriceBuffer {
 	return fifo
 }
 
+func (buffer *PriceBuffer) GetLatest() *Price {
+	defer buffer.lock.Release()
+	buffer.lock.Acquire()
+
+	latest := buffer.buffer.Front().Value.(Price)
+	return &latest
+}
+
 func (fifo *PriceBuffer) Append(elt Price) {
 
 	defer fifo.lock.Release()

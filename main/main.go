@@ -4,26 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gattaca-pyth/streamer"
-
+	
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/gattca/oracle-price-streamer/streamer"
 
 	"go.blockdaemon.com/pyth"
-
 )
-
 
 var testRPC = "https://api.devnet.solana.com"
 var testWS = "wss://api.devnet.solana.com"
-
 
 func main() {
 	fmt.Println("Hello from Gattaca")
 
 	streamPythPrices()
 
-	
 }
 
 func streamPythPrices() {
@@ -46,9 +42,8 @@ func streamPythPrices() {
 	products := make(map[solana.PublicKey]streamer.PythProduct)
 	products[avaxKey] = streamer.PythProduct{
 		Symbol: "AVAX/USD",
-		Key: avaxKey,
+		Key:    avaxKey,
 	}
-		
 
 	myStreamer := streamer.NewPythStreamer(products, testRPC, testWS)
 
@@ -56,17 +51,14 @@ func streamPythPrices() {
 
 }
 
-
-
 func PrintAllPythProductAccounts() {
-	
-	client := pyth .NewClient(pyth.Devnet, testRPC, testWS)
+
+	client := pyth.NewClient(pyth.Devnet, testRPC, testWS)
 	products, _ := client.GetAllProductAccounts(context.TODO(), rpc.CommitmentProcessed)
-	
-	for _, product := range products{
+
+	for _, product := range products {
 		jsonData, _ := json.MarshalIndent(product, "", "  ")
-	fmt.Println(string(jsonData))
+		fmt.Println(string(jsonData))
 	}
 
 }
-

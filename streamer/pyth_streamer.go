@@ -67,6 +67,20 @@ func (streamer PythStreamer) StreamProducts() {
 
 }
 
+func (streamer PythStreamer) GetPrices() []*Price {
+
+	var prices []*Price
+
+	for key, _ := range streamer.products {
+        buffer := streamer.priceCache[key] 
+		prices = append(prices, buffer.GetLatest())
+    }
+
+
+	return prices
+
+}
+
 
 func (streamer PythStreamer)shouldDump(productKey solana.PublicKey) bool {
 
