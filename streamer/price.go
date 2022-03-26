@@ -11,22 +11,26 @@ import (
 )
 
 type Price struct {
-	Price int64
-	Slot uint64
-	Symbol string
+	Price    int64
+	Slot     uint64
+	Symbol   string
 	Decimals uint
 }
 
 func MarshallPrice(price *Price) ([]byte, error) {
-	var toHash [32]byte
+	var serializedPrice [32]byte
 
-	binary.LittleEndian.PutUint64(toHash[:8], uint64(price.Price))
-	binary.LittleEndian.PutUint64(toHash[8:8+8], uint64(price.Slot))
-	binary.LittleEndian.PutUint16(toHash[8+8:8+8+2], uint16(price.Decimals))
+	strLength := len(price.Symbol)
 
-	copy(toHash[8+8+2:], []byte(price.Symbol))
+	binary.LittleEndian.PutUint16(serializedPrice[:2], uint16(strLength))
 
-	return toHash[:], nil
+	binary.LittleEndian.PutUint64(serializedPrice[2:2+8], uint64(price.Price))
+	binary.LittleEndian.PutUint64(serializedPrice[2+8:2+8+8], uint64(price.Slot))
+	binary.LittleEndian.PutUint16(serializedPrice[2+8+8:2+8+8+2], uint16(price.Decimals))
+
+	copy(serializedPrice[2+8+8+2:], []byte(price.Symbol))
+
+	return serializedPrice[:], nil
 }
 
 func PriceToHash(price *Price) common.Hash {
@@ -40,13 +44,13 @@ func PriceToHash(price *Price) common.Hash {
 }
 
 func UnmarshallPrice(data []byte) (*Price, error) {
+	strLengthVal := binary.LittleEndian.Uint16(data[:2])
+	priceVal := binary.LittleEndian.Uint64(data[2 : 2+8])
+	slotVal := binary.LittleEndian.Uint64(data[2+8 : 2+8+8])
+	decimalVal := binary.LittleEndian.Uint16(data[2+8+8 : 2+8+8+2])
+	symbol := string(data[2+8+8+2 : 2+8+8+2+strLengthVal])
 
-	priceVal := binary.LittleEndian.Uint64(data[:8])
-	slotVal := binary.LittleEndian.Uint64(data[8 : 8+8])
-	decimalVal := binary.LittleEndian.Uint16(data[8+8 : 8+8+2])
-	symbol := string(data[8+8+2:])
-
-	price := Price {
+	price := Price{
 		Price:    int64(priceVal),
 		Slot:     slotVal,
 		Symbol:   symbol,
@@ -56,8 +60,7 @@ func UnmarshallPrice(data []byte) (*Price, error) {
 	return &price, nil
 }
 
-
-func PricesToBytes(prices []*Price) ([] byte, error) {
+func PricesToBytes(prices []*Price) ([]byte, error) {
 	var byteArr []byte
 	for _, price := range prices {
 
@@ -67,7 +70,7 @@ func PricesToBytes(prices []*Price) ([] byte, error) {
 		} else {
 			return nil, err
 		}
-		
+
 	}
 	return byteArr, nil
 }
@@ -79,31 +82,30 @@ func BytesToPrices(priceBytes []byte) ([]*Price, error) {
 
 	var prices []*Price
 
-	if len(priceBytes) % byteStep != 0 {
+	if len(priceBytes)%byteStep != 0 {
 		return nil, fmt.Errorf("Malformed byte array")
 	}
 
 	for {
 
-		if offset + byteStep > len(priceBytes) {
+		if offset+byteStep > len(priceBytes) {
 			break
 		}
 
-		price, err := UnmarshallPrice(priceBytes[offset:offset+byteStep])
+		price, err := UnmarshallPrice(priceBytes[offset : offset+byteStep])
 
-		if  err != nil {
+		if err != nil {
 			return nil, err
 		}
 		prices = append(prices, price)
 
-		offset =+ byteStep
+		offset = +byteStep
 
 	}
 
 	return prices, nil
 
 }
-
 
 func (tx *Price) EncodeRLP(w io.Writer) error {
 
@@ -122,8 +124,6 @@ func (tx *Price) EncodeRLP(w io.Writer) error {
 	// }
 	// return rlp.Encode(w, buf.Bytes())
 }
-
-
 
 // // MarshalBinary returns the canonical encoding of the transaction.
 // // For legacy transactions, it returns the RLP encoding. For EIP-2718 typed
@@ -144,11 +144,10 @@ func (px *Price) DecodeRLP(s *rlp.Stream) error {
 	return fmt.Errorf("GTC decoding price")
 }
 
-
 type PriceBuffer struct {
 	buffer *list.List
 	size   uint64
-	lock Lock
+	lock   Lock
 }
 
 func NewPriceBuffer(size uint64) *PriceBuffer {
@@ -187,11 +186,10 @@ func (fifo *PriceBuffer) IsValidPrice(price *Price) bool {
 	defer fifo.lock.Release()
 	fifo.lock.Acquire()
 
-
 	for elt := fifo.buffer.Front(); elt != nil; elt = elt.Next() {
 		cachedPrice := elt.Value.(Price)
 
-		if cachedPrice.Price == price.Price && cachedPrice.Slot == price.Slot && price.Symbol == price.Symbol{
+		if cachedPrice.Price == price.Price && cachedPrice.Slot == price.Slot && price.Symbol == price.Symbol {
 			return true
 		}
 	}
@@ -203,7 +201,6 @@ func (fifo *PriceBuffer) Len() int {
 	fifo.lock.Acquire()
 	return fifo.buffer.Len()
 }
-
 
 type Lock struct {
 	lock chan interface{}
