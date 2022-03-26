@@ -93,6 +93,10 @@ func (streamer *PythStreamer) GetPrices() []*Price {
 
 }
 
+func (streamer *PythStreamer) GetPricesBytes()([] byte, error) {
+	return PricesToBytes(streamer.GetPrices())
+}
+
 func (streamer *PythStreamer) GetPriceBuffer(price *Price) (*PriceBuffer, error) {
 	for key, _ := range streamer.products {
 

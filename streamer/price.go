@@ -65,7 +65,7 @@ func PricesToBytes(prices []*Price) ([]byte, error) {
 	for _, price := range prices {
 
 		priceBytes, err := MarshallPrice(price)
-		if err != nil {
+		if err == nil {
 			byteArr = append(byteArr, priceBytes...)
 		} else {
 			return nil, err
