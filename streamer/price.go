@@ -2,7 +2,12 @@ package streamer
 
 import (
 	"container/list"
+	"encoding/binary"
 	"fmt"
+	"io"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rlp"
 )
 
 type Price struct {
@@ -12,16 +17,131 @@ type Price struct {
 	Decimals uint
 }
 
-type AggPrice struct {
-	price int64
-	sourceIds string
-	symbol string
-	decimals uint
+func MarshallPrice(price *Price) ([]byte, error) {
+	var toHash [32]byte
+
+	binary.LittleEndian.PutUint64(toHash[:8], uint64(price.Price))
+	binary.LittleEndian.PutUint64(toHash[8:8+8], uint64(price.Slot))
+	binary.LittleEndian.PutUint16(toHash[8+8:8+8+2], uint16(price.Decimals))
+
+	copy(toHash[8+8+2:], []byte(price.Symbol))
+
+	return toHash[:], nil
 }
 
-func (p *AggPrice) setSourceId( pythSlot int, chainlinkSlot int) {
+func PriceToHash(price *Price) common.Hash {
+	b, err := MarshallPrice(price)
+	if err != nil {
+		// gattaca TODO is this a good idea?
+		return common.Hash{}
+	}
 
-	p.sourceIds = fmt.Sprintf("%d:%d", pythSlot, chainlinkSlot)
+	return common.BytesToHash(b)
+}
+
+func UnmarshallPrice(data []byte) (*Price, error) {
+
+	priceVal := binary.LittleEndian.Uint64(data[:8])
+	slotVal := binary.LittleEndian.Uint64(data[8 : 8+8])
+	decimalVal := binary.LittleEndian.Uint16(data[8+8 : 8+8+2])
+	symbol := string(data[8+8+2:])
+
+	price := Price {
+		Price:    int64(priceVal),
+		Slot:     slotVal,
+		Symbol:   symbol,
+		Decimals: uint(decimalVal),
+	}
+
+	return &price, nil
+}
+
+
+func PricesToBytes(prices []*Price) ([] byte, error) {
+	var byteArr []byte
+	for _, price := range prices {
+
+		priceBytes, err := MarshallPrice(price)
+		if err != nil {
+			byteArr = append(byteArr, priceBytes...)
+		} else {
+			return nil, err
+		}
+		
+	}
+	return byteArr, nil
+}
+
+func BytesToPrices(priceBytes []byte) ([]*Price, error) {
+
+	byteStep := 32
+	offset := 0
+
+	var prices []*Price
+
+	if len(priceBytes) % byteStep != 0 {
+		return nil, fmt.Errorf("Malformed byte array")
+	}
+
+	for {
+
+		if offset + byteStep > len(priceBytes) {
+			break
+		}
+
+		price, err := UnmarshallPrice(priceBytes[offset:offset+byteStep])
+
+		if  err != nil {
+			return nil, err
+		}
+		prices = append(prices, price)
+
+		offset =+ byteStep
+
+	}
+
+	return prices, nil
+
+}
+
+
+func (tx *Price) EncodeRLP(w io.Writer) error {
+
+	// panic("GTC encoding price")
+
+	return fmt.Errorf("GTC encoding price")
+	// if tx.Type() == LegacyTxType {
+	// 	return rlp.Encode(w, tx.inner)
+	// }
+	// // It's an EIP-2718 typed TX envelope.
+	// buf := encodeBufferPool.Get().(*bytes.Buffer)
+	// defer encodeBufferPool.Put(buf)
+	// buf.Reset()
+	// if err := tx.encodeTyped(buf); err != nil {
+	// 	return err
+	// }
+	// return rlp.Encode(w, buf.Bytes())
+}
+
+
+
+// // MarshalBinary returns the canonical encoding of the transaction.
+// // For legacy transactions, it returns the RLP encoding. For EIP-2718 typed
+// // transactions, it returns the type and payload.
+// func (tx *Transaction) MarshalBinary() ([]byte, error) {
+// 	if tx.Type() == LegacyTxType {
+// 		return rlp.EncodeToBytes(tx.inner)
+// 	}
+// 	var buf bytes.Buffer
+// 	err := tx.encodeTyped(&buf)
+// 	return buf.Bytes(), err
+// }
+
+// DecodeRLP implements rlp.Decoder
+func (px *Price) DecodeRLP(s *rlp.Stream) error {
+	// panic("GTC decoding price")
+
+	return fmt.Errorf("GTC decoding price")
 }
 
 

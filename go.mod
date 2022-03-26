@@ -3,6 +3,7 @@ module github.com/gattca/oracle-price-streamer
 go 1.18
 
 require (
+	github.com/ethereum/go-ethereum v1.10.16
 	github.com/gagliardetto/solana-go v1.3.1-0.20220222155336-dd0af958252d
 	go.blockdaemon.com/pyth v0.3.6
 )
@@ -29,8 +30,8 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
-	github.com/mattn/go-colorable v0.1.4 // indirect
-	github.com/mattn/go-isatty v0.0.11 // indirect
+	github.com/mattn/go-colorable v0.1.8 // indirect
+	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
