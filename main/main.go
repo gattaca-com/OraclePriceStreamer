@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	
+
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/gattca/oracle-price-streamer/streamer"
+	"github.com/gattaca-com/OraclePriceStreamer/streamer"
 
 	"go.blockdaemon.com/pyth"
 )

@@ -1,4 +1,4 @@
-module github.com/gattca/oracle-price-streamer
+module github.com/gattaca-com/OraclePriceStreamer
 
 go 1.18
 
